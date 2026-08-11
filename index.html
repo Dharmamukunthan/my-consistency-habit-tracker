@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111318"><meta name="description" content="Consistency habit tracker">
+<link rel="manifest" href="manifest.json"><title>Consistency</title>
+<style>
+:root{--bg:#0f1115;--panel:#171a21;--panel2:#20242d;--text:#f5f7fb;--muted:#9ca3af;--line:#303641;--purple:#8b6cff;--green:#35d39a;--pink:#ff6fae;--orange:#ff9b62;--cyan:#53d8e8;--yellow:#f3d66b}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,input,select{font:inherit}
+.app{max-width:720px;margin:auto;min-height:100vh;padding:calc(10px + env(safe-area-inset-top)) 16px calc(95px + env(safe-area-inset-bottom))}
+header{display:flex;justify-content:space-between;align-items:center;padding:10px 2px 18px}.date{font-size:12px;color:var(--muted)}h1{margin:2px 0;font-size:30px;letter-spacing:-1px}
+.add{width:46px;height:46px;border:0;border-radius:16px;background:linear-gradient(135deg,#9c7cff,#654cff);color:#fff;font-size:28px;box-shadow:0 8px 25px #6f56ff44}
+.hero{background:linear-gradient(135deg,#6b48e8,#956cff);border-radius:25px;padding:18px;margin-bottom:20px;box-shadow:0 14px 35px #6848dc45}.heroTop{display:flex;justify-content:space-between;align-items:center}.hero small{color:#e8e0ff}.hero h2{margin:5px 0 0;font-size:25px}.ring{width:72px;height:72px;border-radius:50%;background:conic-gradient(#fff var(--p),#ffffff38 0);display:grid;place-items:center;position:relative}.ring:after{content:"";position:absolute;width:56px;height:56px;background:#754fe9;border-radius:50%}.ring b{z-index:1}.bar{height:7px;background:#ffffff2e;border-radius:10px;margin-top:18px;overflow:hidden}.bar i{display:block;height:100%;background:#fff;border-radius:10px;width:0}
+.streakline{margin-top:13px;font-size:13px;color:#f0ebff}
+.sectionTitle{display:flex;justify-content:space-between;align-items:center;margin:19px 3px 9px}.sectionTitle b{font-size:18px}.sectionTitle span{font-size:12px;color:var(--muted)}
+.habit{display:flex;align-items:center;gap:11px;background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:13px;margin:10px 0;transition:.15s}.habit:active{transform:scale(.99)}
+.iconbox{width:48px;height:48px;border-radius:15px;display:grid;place-items:center;font-size:23px;flex:none}.hinfo{flex:1;min-width:0}.hname{font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.meta{font-size:12px;color:var(--muted);margin-top:4px}.actions{display:flex;align-items:center;gap:2px}.more{background:transparent;color:#9da3ae;font-size:19px;padding:6px}
+.check{width:34px;height:34px;border-radius:50%;border:3px solid var(--c);background:transparent;color:#fff;display:grid;place-items:center;padding:0;font-size:19px;font-weight:900}.check.done{background:var(--c)}
+.empty{text-align:center;color:var(--muted);padding:30px}.empty button{margin-top:12px;background:#292e38;color:#fff;border:0;border-radius:12px;padding:11px 15px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.stat{background:var(--panel);border:1px solid var(--line);border-radius:17px;padding:15px;text-align:center}.stat b{font-size:21px;display:block}.stat span{font-size:11px;color:var(--muted)}
+.calendar{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:15px}.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}.cell{aspect-ratio:1;border-radius:6px;background:#292e37}.cell.done{background:var(--green)}.cell.some{background:#7559db}.cell.today{outline:2px solid #fff}
+.insight{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:16px}.insightRow{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line)}.insightRow:last-child{border:0}
+.bottom{position:fixed;left:0;right:0;bottom:0;background:#15171d;border-top:1px solid var(--line);padding:8px max(10px,env(safe-area-inset-left)) calc(8px + env(safe-area-inset-bottom));z-index:10}.nav{max-width:720px;margin:auto;display:flex;justify-content:space-around}.nav button{background:none;border:0;color:#818793;font-size:11px;padding:5px 18px}.nav button.active{color:#a28cff;font-weight:800}.nav b{display:block;font-size:20px;margin-bottom:1px}
+.page{display:none}.page.active{display:block}
+.modal{display:none;position:fixed;inset:0;background:#000b;z-index:30;align-items:flex-end}.modal.show{display:flex}.sheet{width:min(720px,100%);margin:auto;background:#181b22;border:1px solid #303641;border-radius:25px 25px 0 0;padding:20px}.sheet h2{margin:0 0 14px}.sheet label{display:block;font-size:12px;color:#aeb4bf;font-weight:700;margin:10px 0 5px}.sheet input,.sheet select{width:100%;background:#242933;border:1px solid #373d48;color:#fff;padding:13px;border-radius:12px;outline:0}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.colors{display:flex;gap:9px;margin:7px 0 15px}.color{width:29px;height:29px;border-radius:50%;border:3px solid transparent}.color.sel{border-color:#fff}.sheetBtns{display:flex;gap:9px}.sheetBtns button{flex:1;padding:13px;border-radius:13px;border:0;font-weight:800}.cancel{background:#2a2f39;color:#fff}.save{background:linear-gradient(135deg,#8c6dff,#654cff);color:#fff}
+.detailHero{border-radius:25px;padding:20px;margin-bottom:12px}.back{background:transparent;color:#fff;border:0;font-size:25px;padding:0 0 15px}.detailIcon{font-size:34px}.detailHero h2{font-size:26px;margin:10px 0 4px}.detailStats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:18px}.detailStats div{background:#0002;border-radius:14px;padding:12px;text-align:center}.detailStats b{display:block;font-size:19px}.detailStats span{font-size:10px;color:#ffffffbb}.complete{width:100%;padding:14px;border:0;border-radius:15px;background:#fff;color:#111;font-weight:900;margin-top:16px}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#fff;color:#111;padding:11px 15px;border-radius:13px;font-weight:750;display:none;z-index:50}
+
+.topnav{display:flex;gap:8px;overflow:auto;margin:0 0 14px}.topnav button{white-space:nowrap;background:#1d2129;color:#aeb4bf;border:1px solid #303641;border-radius:12px;padding:8px 12px;font-weight:700}.topnav button.active{background:#8b6cff;color:#fff;border-color:#8b6cff}
+.profile{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:13px;margin-bottom:12px}.avatar{width:48px;height:48px;border-radius:16px;background:linear-gradient(135deg,#8b6cff,#ff6fae);display:grid;place-items:center;font-weight:900;font-size:20px}.levelbar{height:6px;background:#303641;border-radius:10px;margin-top:7px;overflow:hidden}.levelbar i{display:block;height:100%;background:linear-gradient(90deg,#8b6cff,#ff6fae);width:0}
+.medals{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.medal{background:var(--panel);border:1px solid var(--line);border-radius:17px;padding:14px;text-align:center}.medal .micon{font-size:28px}.medal b{display:block;font-size:12px;margin-top:5px}.medal span{font-size:10px;color:var(--muted)}
+.moodrow{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}.mood{border:1px solid var(--line);background:var(--panel);border-radius:14px;padding:10px 4px;text-align:center;color:#fff}.mood.selected{outline:2px solid #fff;background:#292e38}.mood div{font-size:22px}.mood small{color:var(--muted);font-size:9px}
+.weekcard{background:linear-gradient(135deg,#1f2632,#171a21);border:1px solid var(--line);border-radius:20px;padding:17px}.weekcard h3{margin:0 0 4px}.weekcard p{color:var(--muted);font-size:12px;margin:0 0 12px}.weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}.wd{text-align:center;font-size:10px;color:#8f96a3}.wd .dot{height:32px;margin-top:4px;border-radius:9px;background:#2a2f39;display:grid;place-items:center;color:#fff}.wd .dot.good{background:#35d39a;color:#071810}.wd .dot.mid{background:#8b6cff}.chartbox{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:15px}.bars{display:flex;align-items:end;gap:8px;height:120px}.barcol{flex:1;text-align:center}.barcol i{display:block;min-height:5px;border-radius:7px 7px 2px 2px;background:linear-gradient(180deg,#8b6cff,#53d8e8)}.barcol small{font-size:9px;color:var(--muted);display:block;margin-top:5px}
+
+/* Final five-section app navigation */
+.appBottomNav{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:min(100%,520px);z-index:50;background:rgba(20,23,29,.97);backdrop-filter:blur(14px);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);padding:8px 6px calc(8px + env(safe-area-inset-bottom));gap:3px}
+.appBottomNav button{border:0;background:transparent;color:#858d9b;font-size:10px;font-weight:800;padding:5px 2px;border-radius:12px}.appBottomNav button.active{color:#fff;background:#282d37}.appBottomNav .ico{display:block;font-size:19px;line-height:20px;margin-bottom:2px}
+.appShell{padding-bottom:86px}
+.taskMeta{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.pill{font-size:10px;padding:4px 7px;border-radius:999px;border:1px solid var(--line);color:#c7ccd5;background:#20252d}.pill.easy{border-color:#35d39a}.pill.medium{border-color:#8b6cff}.pill.hard{border-color:#ff6f91}.pill.immediate{border-color:#ff6f91}.pill.important{border-color:#ffbd66}.pill.casual{border-color:#53d8e8}
+.groupCard{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:13px;margin-bottom:10px}.groupCard h3{font-size:14px;margin:0 0 10px}.emptyState{padding:16px;color:var(--muted);font-size:12px;text-align:center}
+.diffRow{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.diffBtn{background:#20252d;border:1px solid var(--line);border-radius:11px;color:#b9c0cb;padding:8px;font-size:11px;font-weight:800}.diffBtn.sel{color:#fff;background:#303744;outline:2px solid #8b6cff}
+.calGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}.calHead{text-align:center;color:#7f8795;font-size:9px}.calDay{min-height:36px;border:1px solid var(--line);border-radius:8px;background:#20252d;padding:4px;font-size:9px}.calDay.today{outline:2px solid #fff}.calDay.good{background:#174c3b}.calDay .n{font-weight:800}.calDay .p{font-size:8px;color:#b7c0cc}
+body{padding-bottom:0}
+<style>
+.taskControls{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.selectCtl,.dateCtl{width:100%;box-sizing:border-box;background:#20252d;color:#fff;border:1px solid var(--line);border-radius:11px;padding:9px;font-size:11px}.editMeta{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}
+.calNav{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}.calNav button{border:1px solid var(--line);background:#20252d;color:#fff;border-radius:10px;padding:7px 13px;font-size:18px}.calDay{cursor:pointer}.calDay.selected{outline:2px solid #8b6cff}.dayTask{display:flex;align-items:center;gap:9px;padding:10px 0;border-bottom:1px solid var(--line)}.dayTask .check{width:25px;height:25px;border-radius:8px;display:grid;place-items:center;border:1px solid var(--line);background:#20252d;color:#fff}.dayTask .check.done{background:#35d39a;color:#071810}
+</style></style>
+
+<style id="white-calendar-date-numbers">
+/* CALENDAR DATE NUMBERS: ALWAYS WHITE */
+#calendarPage .calDay .n,
+#calendarPage button.calDay .n,
+#calendarPage .calDay.today .n,
+#calendarPage .calDay.selected .n,
+#calendarPage .calDay.good .n,
+.calGrid .calDay .n {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    text-shadow: 0 1px 3px rgba(0,0,0,.75) !important;
+    font-weight: 900 !important;
+    opacity: 1 !important;
+}
+</style>
+
+<style id="requested-updates-css">
+:root{--green:#35d39a}
+.avatar{background:linear-gradient(135deg,#35d39a,#53d8e8)!important}
+.levelbar i{background:linear-gradient(90deg,#35d39a,#53d8e8)!important}
+.add{background:linear-gradient(135deg,#35d39a,#2bb583)!important}
+.save{background:linear-gradient(135deg,#35d39a,#2bb583)!important}
+.natureTabs{display:flex;gap:7px;overflow:auto;margin-bottom:10px;padding-bottom:2px}.natureTabs button{white-space:nowrap;background:#1d2129;color:#aeb4bf;border:1px solid #303641;border-radius:12px;padding:8px 10px;font-size:10px;font-weight:800}.natureTabs button.active{background:#35d39a;color:#071810;border-color:#35d39a}
+.profileStatsGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}.profileStat{background:var(--panel);border:1px solid var(--line);border-radius:17px;padding:13px}.profileStat b{display:block;font-size:20px}.profileStat span{font-size:10px;color:var(--muted)}
+.taskMeta{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}.pill{font-size:10px;padding:4px 7px;border-radius:999px;border:1px solid var(--line);color:#c7ccd5;background:#20252d}.pill.easy{border-color:#35d39a}.pill.medium{border-color:#8b6cff}.pill.hard{border-color:#ff6f91}.pill.immediate{border-color:#ff6f91}.pill.important{border-color:#ffbd66}.pill.casual{border-color:#53d8e8}
+.groupCard{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:13px;margin-bottom:10px}.groupCard h3{font-size:14px;margin:0 0 10px}.emptyState{padding:15px;color:var(--muted);font-size:12px;text-align:center}
+.moodAnalytics{display:grid;gap:8px}.moodMonthRow{display:grid;grid-template-columns:72px 1fr 22px;gap:8px;align-items:center;font-size:10px}.moodTrack{height:8px;background:#292e37;border-radius:99px;overflow:hidden}.moodTrack i{display:block;height:100%;background:linear-gradient(90deg,#35d39a,#53d8e8);border-radius:99px}.correlation{background:#1b2925;border:1px solid #2e5e50;border-radius:15px;padding:12px;font-size:11px;line-height:1.45;color:#d9eee8}
+.taskRow{display:flex;gap:9px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}.taskRow:last-child{border-bottom:0}.taskRowMain{flex:1;min-width:0}.selectCtl,.dateCtl{width:100%;box-sizing:border-box;background:#20252d;color:#fff;border:1px solid var(--line);border-radius:11px;padding:9px;font-size:11px}.editMeta{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:7px}
+.calNav{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}.calNav button{border:1px solid var(--line);background:#20252d;color:#fff;border-radius:10px;padding:7px 13px;font-size:18px}.calDay{cursor:pointer}.calDay.selected{outline:2px solid #35d39a}.dayTask{display:flex;align-items:center;gap:9px;padding:10px 0;border-bottom:1px solid var(--line)}.dayTask .check{width:25px;height:25px;border-radius:8px;display:grid;place-items:center;border:1px solid var(--line);background:#20252d;color:#fff}.dayTask .check.done{background:#35d39a;color:#071810}
+</style>
+<style id="exclusive-batch-upgrade">
+.exclusiveBatchCard{display:flex;align-items:center;gap:12px;margin:10px 0 14px;padding:14px;border:1px solid #31544b;background:linear-gradient(135deg,#172a25,#142029);border-radius:18px;box-shadow:0 8px 24px #0004}.exclusiveMedal{width:52px;height:52px;border-radius:16px;display:grid;place-items:center;font-size:29px;background:linear-gradient(145deg,#35d39a,#1d8065);box-shadow:inset 0 1px #fff4,0 5px 16px #35d39a33}.exclusiveCopy{display:flex;flex-direction:column;gap:3px;flex:1}.exclusiveCopy b{font-size:15px}.exclusiveCopy span,.exclusiveCount span{font-size:11px;color:#8faaa1}.exclusiveCount{text-align:right}.exclusiveCount b{font-size:22px;color:#35d39a;display:block}.monthlyGallery{display:grid;gap:8px}.monthlyMedal{display:flex;align-items:center;gap:11px;padding:10px;border-radius:15px;background:#151b22;border:1px solid #242c36}.bigMedal{font-size:28px;width:46px;height:46px;display:grid;place-items:center;border-radius:14px;background:#202932}.monthlyMedalMain{display:flex;flex-direction:column;gap:2px}.monthlyMedalMain b{font-size:13px}.monthlyMedalMain span{font-size:11px;color:#35d39a}.monthlyMedalMain small{font-size:10px;color:#7f8997}
+</style></head>
+<body><div class="appShell">
+<div class="app">
+<header><div><div class="date" id="date"></div><h1>Good afternoon 👋</h1></div><button class="add" onclick="openAdd()">+</button></header>
+<div id="todayLevel" class="profile"><div class="avatar">C</div><div style="flex:1"><b id="levelTitle">Level 1 · Starter</b><div class="meta"><span id="levelXp">0</span> XP · <span id="levelNext">100</span> XP to next level</div><div class="levelbar"><i id="levelBar"></i></div></div></div>
+<div id="todayPage" class="page active">
+<section class="hero"><div class="heroTop"><div><small>Today's progress</small><h2><span id="done">0</span> / <span id="total">0</span> completed</h2></div><div class="ring" id="ring" style="--p:0%"><b id="pct">0%</b></div></div><div class="bar"><i id="bar"></i></div><div class="streakline">🔥 <b id="streak">0</b> day current streak · ⭐ <b id="xp">0</b> XP</div></section>
+<div class="sectionTitle"><b>To do</b><span id="remain">0 remaining</span></div><div id="habitList"></div>
+</div>
+
+<div id="statsPage" class="page">
+<div class="sectionTitle"><b>Your stats</b><span>All time</span></div>
+<div class="stats"><div class="stat"><b id="sCurrent">0</b><span>🔥 Current streak</span></div><div class="stat"><b id="sBest">0</b><span>🏆 Best streak</span></div><div class="stat"><b id="sDone">0</b><span>✅ Total done</span></div></div>
+<div class="sectionTitle"><b>Last 35 days</b><span>Consistency</span></div><div class="calendar"><div class="grid" id="calendar"></div></div>
+<div class="sectionTitle"><b>Weekly review</b></div><div class="insight" id="insights"></div><div class="sectionTitle"><b>Great job this week 🎉</b><span id="weekPct">0%</span></div>
+<div class="weekcard"><h3 id="weekHeadline">Keep going!</h3><p id="weekText">Every completed habit is a win.</p><div class="weekdays" id="weekdays"></div></div>
+<div class="sectionTitle"><b>Completion graph</b><span>Last 7 days</span></div><div class="chartbox"><div class="bars" id="bars"></div></div>
+</div>
+
+<div id="profilePage" class="page">
+<div class="sectionTitle"><b>Profile</b><span>Consistency</span></div>
+<div class="profile"><div class="avatar">C</div><div><h2 style="margin:0">Consistency</h2><div class="meta">Your habit journey at a glance</div></div></div>
+<div class="sectionTitle"><b>Statistics</b><span>All time</span></div>
+<div class="profileStatsGrid">
+  <div class="profileStat"><b id="profileTotalHabits">0</b><span>Total habits</span></div>
+  <div class="profileStat"><b id="profileBatchStat">0</b><span>Monthly medals</span></div>
+  <div class="profileStat"><b id="profileCurrent">0</b><span>Current streak</span></div>
+  <div class="profileStat"><b id="profileBest">0</b><span>Best streak</span></div>
+</div>
+<div class="exclusiveBatchCard"><div class="exclusiveMedal">🏅</div><div class="exclusiveCopy"><b>Exclusive Batch</b><span id="exclusiveBatchSubtitle">Monthly completion medals</span></div><div class="exclusiveCount"><b id="profileBatch">0</b><span>earned</span></div></div>
+<div class="sectionTitle"><b>Level & XP</b><span id="profileLevel">Level 1</span></div>
+<div class="insight"><div class="insightRow"><span>Total XP</span><b id="profileXp">0</b></div><div class="insightRow"><span>Current level</span><b id="profileLvl">1</b></div><div class="insightRow"><span>Total levels in app</span><b id="profileLevelCount">200</b></div><div class="insightRow"><span>Achievements unlocked</span><b id="achievementCount">0 / 20</b></div></div>
+<div class="sectionTitle"><b>Achievements</b><span>20 total</span></div><div class="medals" id="medals"></div>
+<div class="sectionTitle"><b>Monthly Medal Gallery</b><span id="exclusiveBatchGalleryLabel">Your monthly batches</span></div><div class="monthlyGallery" id="exclusiveBatchGallery"></div>
+<div class="sectionTitle"><b>How are you feeling?</b><span>Today</span></div><div class="moodrow" id="moods"></div>
+<div class="sectionTitle"><b>Mood & habits correlation</b><span id="moodMonthTitle">This month</span></div>
+<div class="correlation" id="moodCorrelation">Log moods and a morning-routine habit to see your correlation.</div>
+<div class="sectionTitle"><b>Mood statistics</b><span id="moodBrowseLabel">Monthly chart</span></div>
+<div class="calNav"><button onclick="moveMoodMonth(-1)">‹</button><b id="moodBrowseTitle"></b><button onclick="moveMoodMonth(1)">›</button></div>
+<div class="chartbox"><div class="moodAnalytics" id="moodMonthChart"></div></div>
+</div>
+
+<div id="habitsPage" class="page">
+<div class="sectionTitle"><b>Habits</b><span>All habits + categories</span></div>
+<div class="natureTabs" id="natureTabs"></div>
+<div class="groupCard"><h3>All habits <span style="float:right;color:#8f96a3" id="habitFilterCount">0</span></h3><div id="allHabitsList"></div></div>
+<div class="groupCard"><h3>Difficulty</h3><div class="diffRow"><button class="diffBtn" id="diffAll" onclick="filterDifficulty('all')">All</button><button class="diffBtn" onclick="filterDifficulty('easy')">Easy</button><button class="diffBtn" onclick="filterDifficulty('medium')">Medium</button><button class="diffBtn" onclick="filterDifficulty('hard')">Hard</button></div><div id="difficultyCounts" class="taskMeta" style="margin-top:8px"></div></div>
+<div class="groupCard"><h3>Priority</h3><div id="priorityGroups"></div></div>
+</div>
+
+<div id="calendarPage" class="page">
+  <div class="sectionTitle"><b>Calendar</b><span id="calendarMonth"></span></div>
+  <div class="groupCard"><div class="calGrid" id="calendarGrid"></div></div>
+  <div id="calendarDayDetails" class="dayDetails"></div><div class="groupCard"><h3>Monthly summary</h3><div class="insightRow"><span>Completed</span><b id="monthDone">0</b></div><div class="insightRow"><span>Completion</span><b id="monthPct">0%</b></div></div>
+</div>
+
+<div class="appBottomNav">
+ <button id="bnToday" class="active" onclick="showPage('today')"><span class="ico">🏠</span>Today</button>
+ <button id="bnHabits" onclick="showPage('habits')"><span class="ico">✓</span>Habits</button>
+ <button id="bnCalendar" onclick="showPage('calendar')"><span class="ico">📅</span>Calendar</button>
+ <button id="bnInsights" onclick="showPage('stats')"><span class="ico">📊</span>Insights</button>
+ <button id="bnProfile" onclick="showPage('profile')"><span class="ico">👤</span>Profile</button>
+</div>
+<div id="settingsPage" class="page">
+<div class="sectionTitle"><b>Settings</b></div>
+<div class="insight">
+<div class="insightRow"><span>Habits</span><b id="setCount">0</b></div>
+<div class="insightRow"><span>XP earned</span><b id="setXp">0</b></div>
+<div class="insightRow"><span>Storage</span><b>On this device</b></div>
+</div>
+<div class="sectionTitle"><b>App</b></div><div class="insight"><div class="insightRow"><span>Install</span><button style="background:#8b6cff;color:#fff;border:0;border-radius:9px;padding:7px 10px" onclick="installApp()">Install</button></div><div class="insightRow"><span>Reset all habits</span><button style="background:#3a2027;color:#ff9fb5;border:0;border-radius:9px;padding:7px 10px" onclick="resetAll()">Reset</button></div></div>
+</div>
+
+<div id="detailPage" class="page"></div>
+</div>
+
+<div class="bottom" style="display:none"><div class="nav"><button class="active" id="nToday" onclick="showPage('today')"><b>✿</b>Today</button><button id="nStats" onclick="showPage('stats')"><b>▥</b>Stats</button><button id="nSettings" onclick="showPage('settings')"><b>⚙</b>Settings</button></div></div>
+
+<div class="modal" id="addModal"><div class="sheet"><h2>Add a habit</h2>
+<label>Habit name</label><input id="newName" placeholder="e.g. Read 10 pages">
+<div class="row"><div><label>Nature of task</label><select id="newCat"><option>Health</option><option>Study</option><option>Fitness</option><option>Mind</option><option>Productivity</option><option>Personal</option></select></div>
+<div><label>Difficulty</label><select id="newDiff"><option value="easy">Easy</option><option value="medium" selected>Medium</option><option value="hard">Hard</option></select></div></div>
+<label>Priority</label><select id="newPriority"><option value="immediate">Immediate</option><option value="important" selected>Important</option><option value="casual">Casual</option></select>
+<label>Scheduled date <span style="font-weight:400;color:#8f96a3">(optional)</span></label><input id="newDate" type="date">
+<label>Colour</label><div class="colors" id="colors"></div>
+<div class="sheetBtns"><button class="cancel" onclick="closeAdd()">Cancel</button><button class="save" onclick="saveHabit()">Add habit</button></div></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const KEY="consistency_full_v4";
+const COLORS=["#35d39a","#53d8e8","#8b6cff","#f3d66b","#ff9b62","#6bd3a7"];
+const NATURES=["Health","Study","Fitness","Mind","Productivity","Personal"];
+const DIFFICULTIES=["easy","medium","hard"];
+const PRIORITIES=["immediate","important","casual"];
+const ICONS={Health:"💧",Study:"📚",Fitness:"⚡",Mind:"🧠",Productivity:"✓",Personal:"👤"};
+const LEVELS=["Starter", "Steady", "Focused", "Consistent", "Disciplined", "Habit Builder", "Habit Master", "Momentum", "Dedicated", "Champion", "Legend", "Elite", "Master", "Grandmaster", "Virtuoso", "Consistency Pro", "Consistency Hero", "Consistency Legend", "Ultimate", "Unstoppable", "Consistency Level 21", "Consistency Level 22", "Consistency Level 23", "Consistency Level 24", "Consistency Level 25", "Consistency Level 26", "Consistency Level 27", "Consistency Level 28", "Consistency Level 29", "Consistency Level 30", "Consistency Level 31", "Consistency Level 32", "Consistency Level 33", "Consistency Level 34", "Consistency Level 35", "Consistency Level 36", "Consistency Level 37", "Consistency Level 38", "Consistency Level 39", "Consistency Level 40", "Consistency Level 41", "Consistency Level 42", "Consistency Level 43", "Consistency Level 44", "Consistency Level 45", "Consistency Level 46", "Consistency Level 47", "Consistency Level 48", "Consistency Level 49", "Consistency Level 50", "Consistency Level 51", "Consistency Level 52", "Consistency Level 53", "Consistency Level 54", "Consistency Level 55", "Consistency Level 56", "Consistency Level 57", "Consistency Level 58", "Consistency Level 59", "Consistency Level 60", "Consistency Level 61", "Consistency Level 62", "Consistency Level 63", "Consistency Level 64", "Consistency Level 65", "Consistency Level 66", "Consistency Level 67", "Consistency Level 68", "Consistency Level 69", "Consistency Level 70", "Consistency Level 71", "Consistency Level 72", "Consistency Level 73", "Consistency Level 74", "Consistency Level 75", "Consistency Level 76", "Consistency Level 77", "Consistency Level 78", "Consistency Level 79", "Consistency Level 80", "Consistency Level 81", "Consistency Level 82", "Consistency Level 83", "Consistency Level 84", "Consistency Level 85", "Consistency Level 86", "Consistency Level 87", "Consistency Level 88", "Consistency Level 89", "Consistency Level 90", "Consistency Level 91", "Consistency Level 92", "Consistency Level 93", "Consistency Level 94", "Consistency Level 95", "Consistency Level 96", "Consistency Level 97", "Consistency Level 98", "Consistency Level 99", "Consistency Level 100", "Consistency Level 101", "Consistency Level 102", "Consistency Level 103", "Consistency Level 104", "Consistency Level 105", "Consistency Level 106", "Consistency Level 107", "Consistency Level 108", "Consistency Level 109", "Consistency Level 110", "Consistency Level 111", "Consistency Level 112", "Consistency Level 113", "Consistency Level 114", "Consistency Level 115", "Consistency Level 116", "Consistency Level 117", "Consistency Level 118", "Consistency Level 119", "Consistency Level 120", "Consistency Level 121", "Consistency Level 122", "Consistency Level 123", "Consistency Level 124", "Consistency Level 125", "Consistency Level 126", "Consistency Level 127", "Consistency Level 128", "Consistency Level 129", "Consistency Level 130", "Consistency Level 131", "Consistency Level 132", "Consistency Level 133", "Consistency Level 134", "Consistency Level 135", "Consistency Level 136", "Consistency Level 137", "Consistency Level 138", "Consistency Level 139", "Consistency Level 140", "Consistency Level 141", "Consistency Level 142", "Consistency Level 143", "Consistency Level 144", "Consistency Level 145", "Consistency Level 146", "Consistency Level 147", "Consistency Level 148", "Consistency Level 149", "Consistency Level 150", "Consistency Level 151", "Consistency Level 152", "Consistency Level 153", "Consistency Level 154", "Consistency Level 155", "Consistency Level 156", "Consistency Level 157", "Consistency Level 158", "Consistency Level 159", "Consistency Level 160", "Consistency Level 161", "Consistency Level 162", "Consistency Level 163", "Consistency Level 164", "Consistency Level 165", "Consistency Level 166", "Consistency Level 167", "Consistency Level 168", "Consistency Level 169", "Consistency Level 170", "Consistency Level 171", "Consistency Level 172", "Consistency Level 173", "Consistency Level 174", "Consistency Level 175", "Consistency Level 176", "Consistency Level 177", "Consistency Level 178", "Consistency Level 179", "Consistency Level 180", "Consistency Level 181", "Consistency Level 182", "Consistency Level 183", "Consistency Level 184", "Consistency Level 185", "Consistency Level 186", "Consistency Level 187", "Consistency Level 188", "Consistency Level 189", "Consistency Level 190", "Consistency Level 191", "Consistency Level 192", "Consistency Level 193", "Consistency Level 194", "Consistency Level 195", "Consistency Level 196", "Consistency Level 197", "Consistency Level 198", "Consistency Level 199", "Consistency Level 200"];
+const MOODS=[["😄","Great",5],["🙂","Good",4],["😐","Okay",3],["😕","Low",2],["😴","Tired",1]];
+let D=JSON.parse(localStorage.getItem(KEY)||"null")||JSON.parse(localStorage.getItem("consistency_full_v3")||"null")||{habits:[
+{id:1,name:"Drink a glass of water",cat:"Health",difficulty:"easy",priority:"important",color:"#35d39a",icon:"💧",done:{},specificDate:""},
+{id:2,name:"Two minutes of deep breathing",cat:"Mind",difficulty:"easy",priority:"casual",color:"#53d8e8",icon:"🧠",done:{},specificDate:""},
+{id:3,name:"Write one line in journal",cat:"Mind",difficulty:"medium",priority:"important",color:"#8b6cff",icon:"🧠",done:{},specificDate:""},
+{id:4,name:"Read one page",cat:"Study",difficulty:"easy",priority:"important",color:"#ff9b62",icon:"📚",done:{},specificDate:""},
+{id:5,name:"Text someone you care about",cat:"Personal",difficulty:"medium",priority:"casual",color:"#53d8e8",icon:"👤",done:{},specificDate:""}
+]};
+let selectedColor=COLORS[0],deferredPrompt=null,natureFilter="All",difficultyFilter="all",calendarCursor=new Date(),selectedCalendarDate=localKey(new Date()),moodMonthCursor=new Date();
+function localKey(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
+function keyDate(k){const [y,m,d]=k.split("-").map(Number);return new Date(y,m-1,d)}
+function today(){return localKey(new Date())}
+function isDueOnDate(h,k){return !h.specificDate||h.specificDate===k}
+function dueHabitsForDate(k){return D.habits.filter(h=>isDueOnDate(h,k))}
+function completionPercentForDate(k){const due=dueHabitsForDate(k);if(!due.length)return 0;return Math.round(due.filter(h=>h.done[k]).length/due.length*100)}
+function normalize(){D.habits.forEach(h=>{h.done=h.done||{};h.cat=NATURES.includes(h.cat)?h.cat:"Personal";h.difficulty=String(h.difficulty||"medium").toLowerCase();if(!DIFFICULTIES.includes(h.difficulty))h.difficulty="medium";h.priority=String(h.priority||"important").toLowerCase();if(!PRIORITIES.includes(h.priority))h.priority="important";h.specificDate=h.specificDate||"";h.icon=ICONS[h.cat]||"👤"})}
+normalize();
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredPrompt=e});
+function save(){localStorage.setItem(KEY,JSON.stringify(D));render()}
+function totalDone(){return D.habits.reduce((n,h)=>n+Object.values(h.done).filter(Boolean).length,0)}
+function streak(h){let n=0,d=new Date();while(h.done[localKey(d)]){n++;d.setDate(d.getDate()-1)}return n}
+function best(h){const keys=Object.keys(h.done).filter(k=>h.done[k]).sort();let max=0,run=0,prev=null;for(const k of keys){const d=keyDate(k);if(prev&&localKey(new Date(prev.getFullYear(),prev.getMonth(),prev.getDate()+1))===k)run++;else run=1;max=Math.max(max,run);prev=d}return max}
+function toggle(id,dateKey){const h=D.habits.find(x=>x.id==id),k=dateKey||today();if(!h)return;h.done[k]=!h.done[k];save();toast(h.done[k]?"Completed ✅":"Unchecked")}
+function deleteHabit(id){if(confirm("Delete this habit?")){D.habits=D.habits.filter(h=>h.id!=id);save();showPage("today");toast("Habit deleted")}}
+function editHabit(id){const h=D.habits.find(x=>x.id==id),n=prompt("Rename habit",h.name);if(n&&n.trim()){h.name=n.trim();save()}}
+function openAdd(){addModal.classList.add("show");newName.value="";newCat.value="Health";newDiff.value="medium";newPriority.value="important";newDate.value="";selectedColor=COLORS[0];drawColors();setTimeout(()=>newName.focus(),80)}
+function closeAdd(){addModal.classList.remove("show")}
+function drawColors(){colors.innerHTML=COLORS.map(c=>`<button type="button" class="color ${c===selectedColor?"sel":""}" style="background:${c}" onclick="selectedColor='${c}';drawColors()"></button>`).join("")}
+function saveHabit(){const n=newName.value.trim();if(!n)return toast("Enter a habit name");const cat=newCat.value;D.habits.push({id:Date.now(),name:n,cat,difficulty:newDiff.value,priority:newPriority.value,color:selectedColor,icon:ICONS[cat],done:{},specificDate:newDate.value||""});closeAdd();save();toast("Habit added ✅")}
+function showPage(p){["today","habits","calendar","stats","profile","settings","detail"].forEach(x=>{const el=document.getElementById(x+"Page");if(el)el.classList.toggle("active",x===p)});document.querySelectorAll(".appBottomNav button").forEach(x=>x.classList.remove("active"));if(p==="today")bnToday.classList.add("active");if(p==="habits")bnHabits.classList.add("active");if(p==="calendar")bnCalendar.classList.add("active");if(p==="stats")bnInsights.classList.add("active");if(p==="profile")bnProfile.classList.add("active");todayLevel.style.display=p==="today"?"flex":"none";render()}
+function openDetail(id){const h=D.habits.find(x=>x.id==id);if(!h)return;detailPage.innerHTML=`<button class="back" onclick="showPage('today')">‹</button><section class="detailHero" style="background:linear-gradient(135deg,${h.color},#20242d)"><div class="detailIcon">${h.icon}</div><h2>${esc(h.name)}</h2><div style="color:#fff9;font-size:13px">${h.cat} · ${cap(h.difficulty)} · ${cap(h.priority)} ${h.specificDate?"· 🔔 "+h.specificDate:""}</div><div class="detailStats"><div><b>${streak(h)}</b><span>🔥 Current</span></div><div><b>${best(h)}</b><span>🏆 Best</span></div><div><b>${Object.values(h.done).filter(Boolean).length}</b><span>✅ Total</span></div></div><button class="complete" onclick="toggle(${h.id});openDetail(${h.id})">${h.done[today()]?"✓ Completed today":"Complete today"}</button></section><div class="sectionTitle"><b>Task settings</b><span>3 required categories</span></div><div class="groupCard"><div class="editMeta"><select class="selectCtl" onchange="setHabitMeta(${h.id},'cat',this.value)">${NATURES.map(x=>`<option value="${x}" ${h.cat===x?"selected":""}>${x}</option>`).join("")}</select><select class="selectCtl" onchange="setHabitMeta(${h.id},'difficulty',this.value)">${DIFFICULTIES.map(x=>`<option value="${x}" ${h.difficulty===x?"selected":""}>${cap(x)}</option>`).join("")}</select></div><div class="editMeta"><select class="selectCtl" onchange="setHabitMeta(${h.id},'priority',this.value)">${PRIORITIES.map(x=>`<option value="${x}" ${h.priority===x?"selected":""}>${cap(x)}</option>`).join("")}</select><input class="dateCtl" type="date" value="${h.specificDate||""}" onchange="setHabitDate(${h.id},this.value)"></div></div><div class="sectionTitle"><b>Last 30 days</b></div><div class="calendar"><div class="grid">${Array.from({length:30},(_,i)=>{const d=new Date();d.setDate(d.getDate()-(29-i));const k=localKey(d);return `<div class="cell ${h.done[k]?"done":""} ${k===today()?"today":""}"></div>`}).join("")}</div></div><div class="sheetBtns" style="margin-top:14px"><button class="cancel" onclick="editHabit(${h.id})">Rename</button><button class="save" onclick="deleteHabit(${h.id})">Delete habit</button></div>`;showPage("detail")}
+function setHabitMeta(id,field,value){const h=D.habits.find(x=>x.id==id);if(!h)return;h[field]=field==="difficulty"||field==="priority"?String(value).toLowerCase():value;if(field==="cat")h.icon=ICONS[value];save()}
+function setHabitDate(id,value){const h=D.habits.find(x=>x.id==id);if(h){h.specificDate=value||"";save()}}
+function resetAll(){if(confirm("Reset every habit and all history?")){D={habits:[]};save();toast("All habits reset")}}
+async function installApp(){if(deferredPrompt){deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null}else toast("Use browser menu → Add to Home screen")}
+function toast(s){const t=document.getElementById("toast");t.textContent=s;t.style.display="block";clearTimeout(window.tt);window.tt=setTimeout(()=>t.style.display="none",1600)}
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[c]))}
+function cap(s){return s?String(s).charAt(0).toUpperCase()+String(s).slice(1):""}
+function setMood(m){const q=JSON.parse(localStorage.getItem("consistency_moods")||"{}");q[today()]=m;localStorage.setItem("consistency_moods",JSON.stringify(q));render();toast("Mood saved")}
+function moodsData(){return JSON.parse(localStorage.getItem("consistency_moods")||"{}")}
+function render(){
+ const k=today(),dueToday=dueHabitsForDate(k),t=dueToday.length,c=dueToday.filter(h=>h.done[k]).length,p=completionPercentForDate(k);
+ date.textContent=new Date().toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"});done.textContent=c;total.textContent=t;pct.textContent=p+"%";ring.style.setProperty("--p",p+"%");bar.style.width=p+"%";remain.textContent=`${t-c} remaining`;streak.textContent=t?Math.max(...D.habits.map(streak)):0;xp.textContent=totalDone()*10;
+ habitList.innerHTML=t?dueToday.map(h=>`<div class="habit"><div class="iconbox" style="background:${h.color}2b;color:${h.color}">${h.icon}</div><div class="hinfo" onclick="openDetail(${h.id})"><div class="hname">${esc(h.name)}</div><div class="meta">${h.specificDate?"🔔 "+h.specificDate:"◷ Daily"} · ${cap(h.difficulty)} · 🔥 ${streak(h)} day${streak(h)==1?"":"s"}</div><div class="taskMeta"><span class="pill">${h.cat}</span><span class="pill ${h.priority}">${cap(h.priority)}</span></div></div><div class="actions"><button class="more" onclick="openDetail(${h.id})">⋯</button><button class="check ${h.done[k]?"done":""}" style="--c:${h.color}" onclick="toggle(${h.id})">${h.done[k]?"✓":""}</button></div></div>`).join(""):`<div class="empty">No habits yet.<br><button onclick="openAdd()">＋ Add your first habit</button></div>`;
+ sCurrent.textContent=t?Math.max(...D.habits.map(streak)):0;sBest.textContent=t?Math.max(...D.habits.map(best)):0;sDone.textContent=totalDone();setCount.textContent=t;setXp.textContent=totalDone()*10;
+ let cells="";for(let i=34;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const q=localKey(d),n=D.habits.filter(h=>h.done[q]).length;cells+=`<div class="cell ${n===t&&t?"done":n?"some":""} ${q===k?"today":""}"></div>`}calendar.innerHTML=cells;
+ let perfect=0;for(let i=0;i<7;i++){const d=new Date();d.setDate(d.getDate()-i);const q=localKey(d),due=dueHabitsForDate(q);if(due.length&&due.every(h=>h.done[q]))perfect++}insights.innerHTML=`<div class="insightRow"><span>Perfect days this week</span><b>${perfect}/7</b></div><div class="insightRow"><span>Habits completed today</span><b>${c}/${t}</b></div><div class="insightRow"><span>Total completions</span><b>${totalDone()}</b></div>`;
+ renderExtras();renderHabitsPage();renderCalendarPage();
+}
+function monthlyMedals(){
+ const out=[];const now=new Date();
+ for(let i=0;i<24;i++){
+  const d=new Date(now.getFullYear(),now.getMonth()-i,1),y=d.getFullYear(),m=d.getMonth(),days=new Date(y,m+1,0).getDate();
+  if(!D.habits.length)continue;
+  let completed=0,possible=0;
+  for(let day=1;day<=days;day++){const k=localKey(new Date(y,m,day)),due=dueHabitsForDate(k);possible+=due.length;completed+=due.filter(h=>h.done[k]).length}
+  const rate=possible?Math.round(completed/possible*100):0;
+  if(rate>=50){let tier,icon;if(rate>=100){tier="Diamond Batch";icon="💎"}else if(rate>=90){tier="Gold Batch";icon="🥇"}else if(rate>=75){tier="Silver Batch";icon="🥈"}else{tier="Bronze Batch";icon="🥉"}
+   out.push({label:d.toLocaleDateString(undefined,{month:"long",year:"numeric"}),rate,completed,possible,tier,icon});}
+ }return out;
+}
+function renderExtras(){
+ const x=totalDone()*10,l=Math.min(LEVELS.length,Math.floor(x/100)+1),w=x%100;levelTitle.textContent=`Level ${l} · ${LEVELS[l-1]}`;levelXp.textContent=x;levelNext.textContent=l>=LEVELS.length?0:100-w;levelBar.style.width=(l>=LEVELS.length?100:w)+"%";profileLevel.textContent=`Level ${l}`;profileXp.textContent=x;profileLvl.textContent=l;profileLevelCount.textContent=LEVELS.length;
+ const cur=D.habits.length?Math.max(...D.habits.map(streak)):0,bestAll=D.habits.length?Math.max(...D.habits.map(best)):0;profileTotalHabits.textContent=D.habits.length;const batch=monthlyMedals();profileBatch.textContent=batch.length;profileBatchStat.textContent=batch.length;profileCurrent.textContent=cur;profileBest.textContent=bestAll;exclusiveBatchSubtitle.textContent=batch.length?`Latest: ${batch[0].label} — ${batch[0].tier}`:"Complete a month to earn your first medal";exclusiveBatchGalleryLabel.textContent=`${batch.length} medal${batch.length===1?"":"s"} earned`;exclusiveBatchGallery.innerHTML=batch.length?batch.map(b=>`<div class="monthlyMedal"><div class="bigMedal">${b.icon}</div><div class="monthlyMedalMain"><b>${b.label}</b><span>${b.tier} · ${b.rate}% completion</span><small>${b.completed} / ${b.possible} habit completions</small></div></div>`).join(""):`<div class="emptyState">No monthly medals yet. Reach 50% or more completion in a month to earn one.</div>`;
+ const achievements=[
+ ["🌱","First step",totalDone()>=1],["🔥","3-day streak",D.habits.some(h=>best(h)>=3)],["🔥","7-day streak",D.habits.some(h=>best(h)>=7)],["🏆","14-day streak",D.habits.some(h=>best(h)>=14)],["👑","30-day streak",D.habits.some(h=>best(h)>=30)],["⭐","10 completions",totalDone()>=10],["💯","30 completions",totalDone()>=30],["💎","100 completions",totalDone()>=100],["🚀","250 completions",totalDone()>=250],["🎯","500 XP",x>=500],["🏅","1000 XP",x>=1000],["🌿","5 active habits",D.habits.length>=5],["📚","Study focus",D.habits.some(h=>h.cat==="Study"&&best(h)>=7)],["🧠","Mind focus",D.habits.some(h=>h.cat==="Mind"&&best(h)>=7)],["💪","Fitness focus",D.habits.some(h=>h.cat==="Fitness"&&best(h)>=7)],["💧","Health focus",D.habits.some(h=>h.cat==="Health"&&best(h)>=7)],["🔔","Scheduled habit",D.habits.some(h=>h.specificDate)],["🗓️","First month",totalDone()>=30],["🌟","Consistency hero",D.habits.length>0&&D.habits.every(h=>best(h)>=7)],["🏆","Ultimate streak",D.habits.some(h=>best(h)>=60)]];
+ achievementCount.textContent=achievements.filter(a=>a[2]).length+" / "+achievements.length;medals.innerHTML=achievements.map(a=>`<div class="medal"><div class="micon" style="opacity:${a[2]?1:.3}">${a[0]}</div><b>${a[1]}</b><span>${a[2]?"Unlocked":"Locked"}</span></div>`).join("");
+ const md=moodsData(),gm=md[today()]||"";moods.innerHTML=MOODS.map(z=>`<button class="mood ${gm===z[1]?"selected":""}" onclick="setMood('${z[1]}')"><div>${z[0]}</div><small>${z[1]}</small></button>`).join("");renderMoodAnalytics();
+ const days=[],vals=[];for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const q=localKey(d),pc=completionPercentForDate(q);days.push({d,pc});vals.push(pc)}weekdays.innerHTML=days.map(z=>`<div class="wd">${z.d.toLocaleDateString(undefined,{weekday:"narrow"})}<div class="dot ${z.pc===100?"good":z.pc?"mid":""}">${z.pc}%</div></div>`).join("");const avg=Math.round(vals.reduce((a,b)=>a+b,0)/7);weekPct.textContent=avg+"%";weekHeadline.textContent=avg>=80?"Amazing week! 🎉":avg>=50?"Great job this week! 💪":"You're building momentum 🌱";weekText.textContent=`You averaged ${avg}% completion over the last 7 days. Keep going.`;const max=Math.max(10,...vals);bars.innerHTML=vals.map((v,i)=>`<div class="barcol"><i style="height:${Math.max(5,Math.round(v/max*100))}px"></i><small>${days[i].d.toLocaleDateString(undefined,{weekday:"narrow"})}</small></div>`).join("");
+}
+function renderMoodAnalytics(){
+ const md=moodsData(),mc=moodMonthCursor,y=mc.getFullYear(),m=mc.getMonth(),daysInMonth=new Date(y,m+1,0).getDate(),counts=Object.fromEntries(MOODS.map(x=>[x[1],0]));
+ for(let d=1;d<=daysInMonth;d++){const k=localKey(new Date(y,m,d));if(md[k])counts[md[k]]++}
+ moodBrowseTitle.textContent=mc.toLocaleDateString(undefined,{month:"long",year:"numeric"});moodMonthTitle.textContent=mc.getTime()===new Date(new Date().getFullYear(),new Date().getMonth(),1).getTime()?"This month":mc.toLocaleDateString(undefined,{month:"long",year:"numeric"});const max=Math.max(1,...MOODS.map(x=>counts[x[1]]));moodMonthChart.innerHTML=MOODS.map(x=>`<div class="moodMonthRow"><span>${x[0]} ${x[1]}</span><div class="moodTrack"><i style="width:${counts[x[1]]?Math.max(5,counts[x[1]]/max*100):0}%"></i></div><b>${counts[x[1]]}</b></div>`).join("");
+ const morning=D.habits.filter(h=>/morning|wake|breakfast|water|journal|breath/i.test(h.name));let yes=[],no=[];for(let d=1;d<=daysInMonth;d++){const k=localKey(new Date(y,m,d)),mv=md[k];if(!mv)continue;const score=MOODS.find(x=>x[1]===mv)?.[2]||0;(morning.some(h=>h.done[k])?yes:no).push(score)}const avg=a=>a.length?Math.round(a.reduce((q,z)=>q+z,0)/a.length*20):0;if(morning.length&&yes.length){moodCorrelation.textContent=`${mc.toLocaleDateString(undefined,{month:"long",year:"numeric"})}: you tend to feel better if you complete your morning routine. Your logged mood averaged ${avg(yes)}/100 on days with a morning-routine habit completed${no.length?` versus ${avg(no)}/100 on other logged days`:""}.`;}else moodCorrelation.textContent=`${mc.toLocaleDateString(undefined,{month:"long",year:"numeric"})}: log moods and a morning-routine habit to build your personal correlation.`;
+}
+function moveMoodMonth(delta){moodMonthCursor=new Date(moodMonthCursor.getFullYear(),moodMonthCursor.getMonth()+delta,1);renderMoodAnalytics()}
+
+function renderHabitsPage(){
+ const all=["All",...NATURES];natureTabs.innerHTML=all.map(x=>`<button class="${natureFilter===x?"active":""}" onclick="filterNature('${x}')">${x==="All"?"All":ICONS[x]+" "+x}</button>`).join("");const visible=D.habits.filter(h=>(natureFilter==="All"||h.cat===natureFilter)&&(difficultyFilter==="all"||h.difficulty===difficultyFilter));habitFilterCount.textContent=visible.length;allHabitsList.innerHTML=visible.length?visible.map(h=>`<div class="taskRow"><div class="iconbox" style="width:40px;height:40px;background:${h.color}2b;color:${h.color}">${h.icon}</div><div class="taskRowMain" onclick="openDetail(${h.id})"><b>${esc(h.name)}</b><div class="taskMeta"><span class="pill">${h.cat}</span><span class="pill ${h.difficulty}">${cap(h.difficulty)}</span><span class="pill ${h.priority}">${cap(h.priority)}</span>${h.specificDate?`<span class="pill">🔔 ${h.specificDate}</span>`:""}</div></div></div>`).join(""):"<div class='emptyState'>No habits match this category.</div>";
+ difficultyCounts.innerHTML=DIFFICULTIES.map(d=>`<span class="pill ${d}">${cap(d)}: ${D.habits.filter(h=>(natureFilter==="All"||h.cat===natureFilter)&&h.difficulty===d).length}</span>`).join("");
+ priorityGroups.innerHTML=PRIORITIES.map(pr=>{const hs=visible.filter(h=>h.priority===pr);return `<div class="groupCard"><h3>${cap(pr)} <span style="float:right;color:#8f96a3">${hs.length}</span></h3>${hs.length?hs.map(h=>`<div class="taskRow"><div class="taskRowMain"><b>${esc(h.name)}</b><div class="taskMeta"><span class="pill">${h.cat}</span><span class="pill ${h.difficulty}">${cap(h.difficulty)}</span>${h.specificDate?`<span class="pill">🔔 ${h.specificDate}</span>`:""}</div></div></div>`).join(""):"<div class='emptyState'>No habits here.</div>"}</div>`}).join("");
+}
+function filterNature(x){natureFilter=x;renderHabitsPage()}
+function filterDifficulty(x){difficultyFilter=x;renderHabitsPage()}
+function moveCalendar(delta){calendarCursor=new Date(calendarCursor.getFullYear(),calendarCursor.getMonth()+delta,1);selectedCalendarDate=localKey(calendarCursor);renderCalendarPage()}
+function selectCalendarDate(k){selectedCalendarDate=k;renderCalendarPage()}
+function renderCalendarPage(){
+ const y=calendarCursor.getFullYear(),m=calendarCursor.getMonth(),first=new Date(y,m,1),days=new Date(y,m+1,0).getDate(),start=first.getDay();calendarMonth.textContent=first.toLocaleDateString(undefined,{month:"long",year:"numeric"});let html=`<div class="calNav"><button onclick="moveCalendar(-1)">‹</button><b>${calendarMonth.textContent}</b><button onclick="moveCalendar(1)">›</button></div>`+["S","M","T","W","T","F","S"].map(x=>`<div class="calHead">${x}</div>`).join("");for(let i=0;i<start;i++)html+="<div></div>";for(let d=1;d<=days;d++){const k=localKey(new Date(y,m,d)),due=dueHabitsForDate(k),done=due.filter(h=>h.done[k]).length,pc=completionPercentForDate(k),special=D.habits.filter(h=>h.specificDate===k).length;html+=`<button class="calDay ${k===today()?"today":""} ${k===selectedCalendarDate?"selected":""}" onclick="selectCalendarDate('${k}')"><div class="n">${d}</div><div class="p">${pc}%${special?" · 🔔"+special:""}</div></button>`}calendarGrid.innerHTML=html;
+ const sk=selectedCalendarDate,dt=keyDate(sk),scheduled=D.habits.filter(h=>h.specificDate===sk),daily=D.habits.filter(h=>!h.specificDate),all=Array.from(new Map([...scheduled,...daily].map(h=>[h.id,h])).values());calendarDayDetails.innerHTML=`<div class="sectionTitle"><b>Tasks for ${dt.toLocaleDateString(undefined,{weekday:"long",month:"short",day:"numeric"})}</b><span>${scheduled.length} scheduled</span></div>`+(all.length?all.map(h=>`<div class="dayTask"><div class="check ${h.done[sk]?"done":""}" onclick="toggle(${h.id},'${sk}')">${h.done[sk]?"✓":""}</div><div style="flex:1"><b>${esc(h.name)}</b><div class="taskMeta"><span class="pill">${h.cat}</span><span class="pill ${h.difficulty}">${cap(h.difficulty)}</span><span class="pill ${h.priority}">${cap(h.priority)}</span>${h.specificDate?"<span class='pill'>🔔 Scheduled</span>":"<span class='pill'>Daily</span>"}</div></div></div>`).join(""):"<div class='emptyState'>No tasks for this date.</div>");let md=0,possible=0;for(let d=1;d<=days;d++){const k=localKey(new Date(y,m,d)),due=dueHabitsForDate(k);md+=due.filter(h=>h.done[k]).length;possible+=due.length}monthDone.textContent=md;monthPct.textContent=possible?Math.round(md/possible*100)+"%":"0%";
+}
+function openInitial(){drawColors();render()}
+if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});openInitial();
+</script>
+</div></body></html>
