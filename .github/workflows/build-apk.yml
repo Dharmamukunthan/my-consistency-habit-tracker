@@ -40,7 +40,7 @@ jobs:
           }
           EOF
 
-          npm install
+          npm install -D typescript
 
           cat > capacitor.config.ts <<'EOF'
           import type { CapacitorConfig } from '@capacitor/cli';
