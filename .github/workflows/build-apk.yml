@@ -1,0 +1,86 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout app
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Create Capacitor project
+        run: |
+          cat > package.json <<'EOF'
+          {
+            "name": "consistency-habit-tracker",
+            "version": "1.0.0",
+            "private": true,
+            "scripts": {
+              "build": "echo Web app ready"
+            },
+            "dependencies": {
+              "@capacitor/core": "^7.4.0",
+              "@capacitor/android": "^7.4.0"
+            },
+            "devDependencies": {
+              "@capacitor/cli": "^7.4.0"
+            }
+          }
+          EOF
+
+          npm install
+
+          cat > capacitor.config.ts <<'EOF'
+          import type { CapacitorConfig } from '@capacitor/cli';
+
+          const config: CapacitorConfig = {
+            appId: 'com.consistency.habittracker',
+            appName: 'Consistency Habit Tracker',
+            webDir: 'www'
+          };
+
+          export default config;
+          EOF
+
+          mkdir -p www
+          cp index.html www/
+          cp manifest.json www/
+          cp icon.svg www/
+          cp sw.js www/
+
+      - name: Add Android platform
+        run: npx cap add android
+
+      - name: Sync web app
+        run: npx cap sync android
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v4
+
+      - name: Build APK
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: consistency-habit-tracker-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
