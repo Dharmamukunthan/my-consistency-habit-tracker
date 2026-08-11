@@ -18,7 +18,6 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 22
-        
 
       - name: Create Capacitor project
         run: |
@@ -40,18 +39,14 @@ jobs:
           }
           EOF
 
-          npm install -D typescript
+          npm install
 
-          cat > capacitor.config.ts <<'EOF'
-          import type { CapacitorConfig } from '@capacitor/cli';
-
-          const config: CapacitorConfig = {
-            appId: 'com.consistency.habittracker',
-            appName: 'Consistency Habit Tracker',
-            webDir: 'www'
-          };
-
-          export default config;
+          cat > capacitor.config.json <<'EOF'
+          {
+            "appId": "com.consistency.habittracker",
+            "appName": "Consistency Habit Tracker",
+            "webDir": "www"
+          }
           EOF
 
           mkdir -p www
