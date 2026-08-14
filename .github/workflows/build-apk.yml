@@ -17,7 +17,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: '24'
 
       - name: Create Capacitor project
         run: |
@@ -70,28 +70,72 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v4
 
-      - name: Restore release keystore
+      - name: Prepare signing key
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-        run: |
-          echo "$KEYSTORE_BASE64" | base64 --decode > "$GITHUB_WORKSPACE/release-key.jks"
-
-      - name: Build signed release APK
-        working-directory: android
-        env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          chmod +x gradlew
-          ./gradlew assembleRelease --no-daemon \
-            -Pandroid.injected.signing.store.file="$GITHUB_WORKSPACE/release-key.jks" \
-            -Pandroid.injected.signing.store.password="$KEYSTORE_PASSWORD" \
-            -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
-            -Pandroid.injected.signing.key.password="$KEY_PASSWORD"
+          echo "$KEYSTORE_BASE64" | base64 --decode > android/release-key.jks
+
+          cat > android/keystore.properties <<EOF
+          storeFile=release-key.jks
+          storePassword=$KEYSTORE_PASSWORD
+          keyAlias=$KEY_ALIAS
+          keyPassword=$KEY_PASSWORD
+          EOF
+
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path("android/app/build.gradle")
+          text = p.read_text()
+
+          header = '''import java.util.Properties
+          import java.io.FileInputStream
+
+          def keystoreProperties = new Properties()
+          def keystorePropertiesFile = rootProject.file("keystore.properties")
+          if (keystorePropertiesFile.exists()) {
+              keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+          }
+
+          '''
+
+          if "keystoreProperties" not in text:
+              text = header + text
+
+          signing = '''    signingConfigs {
+                  release {
+                      storeFile file(keystoreProperties["storeFile"])
+                      storePassword keystoreProperties["storePassword"]
+                      keyAlias keystoreProperties["keyAlias"]
+                      keyPassword keystoreProperties["keyPassword"]
+                  }
+              }
+
+              '''
+
+          if "signingConfigs" not in text:
+              text = text.replace("android {", "android {\n" + signing, 1)
+
+          if "signingConfig signingConfigs.release" not in text:
+              text = text.replace(
+                  "buildTypes {",
+                  "buildTypes {\n        release {\n            signingConfig signingConfigs.release\n        }\n",
+                  1
+              )
+
+          p.write_text(text)
+          PY
+
+      - name: Build signed Release APK
+        working-directory: android
+        run: ./gradlew assembleRelease --no-daemon
 
       - name: Upload signed APK
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
-          name: consistency-habit-tracker-v2.0-signed
+          name: consistency-habit-tracker-v2-signed
           path: android/app/build/outputs/apk/release/app-release.apk
