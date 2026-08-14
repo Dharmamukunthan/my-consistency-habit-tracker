@@ -1,13 +1,10 @@
 name: Build Android APK
 
 on:
-  workflow_dispatch:
   push:
     branches:
       - main
-
-permissions:
-  contents: read
+  workflow_dispatch:
 
 jobs:
   build:
@@ -17,14 +14,21 @@ jobs:
       - name: Checkout app
         uses: actions/checkout@v6
 
-      - name: Setup Node.js 24
+      - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '24'
-          package-manager-cache: false
+          node-version: 22
 
-      - name: Create Capacitor project files
-        shell: bash
+      - name: Setup Java 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Create package.json
         run: |
           cat > package.json <<'EOF'
           {
@@ -32,185 +36,117 @@ jobs:
             "version": "2.0.0",
             "private": true,
             "scripts": {
-              "build": "echo Web app is already built"
+              "cap": "cap"
             },
             "dependencies": {
-              "@capacitor/core": "^7.4.3"
+              "@capacitor/core": "8.4.2"
             },
             "devDependencies": {
-              "@capacitor/cli": "^7.4.3"
+              "@capacitor/cli": "8.4.2"
             }
-          }
-          EOF
-
-          cat > capacitor.config.json <<'EOF'
-          {
-            "appId": "com.consistency.habittracker",
-            "appName": "Consistency Habit Tracker",
-            "webDir": "www",
-            "bundledWebRuntime": false
           }
           EOF
 
       - name: Install Capacitor
         run: |
           npm install
-          npm install @capacitor/android@7.4.3
+          npm install @capacitor/android@8.4.2
 
-      - name: Prepare web files
-        shell: bash
+      - name: Create Capacitor configuration
         run: |
-          rm -rf www
-          mkdir -p www
+          cat > capacitor.config.json <<'EOF'
+          {
+            "appId": "com.consistency.habittracker",
+            "appName": "Consistency Habit Tracker",
+            "webDir": "."
+          }
+          EOF
 
-          cp index.html www/
-          cp manifest.json www/
-          cp icon.svg www/
-          cp sw.js www/
-
-          test -f www/index.html
-          test -f www/manifest.json
-          test -f www/icon.svg
-          test -f www/sw.js
+      - name: Validate Capacitor configuration
+        run: |
+          node -e "const c=require('./capacitor.config.json'); if(c.appId!=='com.consistency.habittracker') process.exit(1); if(c.webDir!=='.') process.exit(1); console.log(c)"
 
       - name: Add Android platform
+        run: npx cap add android
+
+      - name: Sync web app into Android
+        run: npx cap sync android
+
+      - name: Check Android project
         run: |
-          npx cap add android
-
-      - name: Sync web app
-        run: |
-          npx cap sync android
-
-      - name: Setup Java 21
-        uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: '21'
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+          test -f android/settings.gradle || test -f android/settings.gradle.kts
+          test -f android/app/build.gradle || test -f android/app/build.gradle.kts
+          test -f index.html
+          echo "Android project and web app are present."
 
       - name: Restore signing keystore
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-        shell: bash
         run: |
           test -n "$KEYSTORE_BASE64"
-
-          echo "$KEYSTORE_BASE64" | base64 --decode > android/app/release-key.jks
-
-          test -s android/app/release-key.jks
-
-          echo "Keystore restored successfully."
+          echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/release-keystore.jks"
+          test -s "$RUNNER_TEMP/release-keystore.jks"
+          echo "Keystore restored."
 
       - name: Verify signing secrets
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        shell: bash
         run: |
           test -n "$KEYSTORE_PASSWORD"
           test -n "$KEY_ALIAS"
           test -n "$KEY_PASSWORD"
-
-          echo "Signing secrets are available."
-
-      - name: Configure release signing
-        env:
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        shell: bash
-        run: |
-          python3 <<'PY'
-          from pathlib import Path
-
-          path = Path("android/app/build.gradle")
-          text = path.read_text()
-
-          signing_block = r'''
-          signingConfigs {
-              release {
-                  storeFile file("release-key.jks")
-                  storePassword System.getenv("KEYSTORE_PASSWORD")
-                  keyAlias System.getenv("KEY_ALIAS")
-                  keyPassword System.getenv("KEY_PASSWORD")
-              }
-          }
-          '''
-
-          if "signingConfigs {" not in text:
-              marker = "buildTypes {"
-              if marker not in text:
-                  raise SystemExit("Could not find buildTypes block in android/app/build.gradle")
-
-              text = text.replace(
-                  marker,
-                  signing_block + "\n" + marker,
-                  1
-              )
-
-          old_release = """release {
-          minifyEnabled false
-          proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-          }"""
-
-          new_release = """release {
-          signingConfig signingConfigs.release
-          minifyEnabled false
-          proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-          }"""
-
-          if "signingConfig signingConfigs.release" not in text:
-              if old_release in text:
-                  text = text.replace(old_release, new_release, 1)
-              else:
-                  raise SystemExit(
-                      "Could not safely find the generated release buildType. "
-                      "No changes were made."
-                  )
-
-          path.write_text(text)
-          PY
-
-          echo "Checking release signing configuration..."
-          grep -n "signingConfigs" android/app/build.gradle
-          grep -n "signingConfig signingConfigs.release" android/app/build.gradle
-          test -f android/app/release-key.jks
+          echo "Signing secrets are present."
 
       - name: Build signed Release APK
-        working-directory: android
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          ./gradlew clean assembleRelease --no-daemon
+          cd android
+          chmod +x gradlew
 
-      - name: Verify APK
-        shell: bash
+          ./gradlew clean assembleRelease \
+            -Pandroid.injected.signing.store.file="$RUNNER_TEMP/release-keystore.jks" \
+            -Pandroid.injected.signing.store.password="$KEYSTORE_PASSWORD" \
+            -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
+            -Pandroid.injected.signing.key.password="$KEY_PASSWORD" \
+            --stacktrace
+
+      - name: Find Release APK
         run: |
-          APK="android/app/build/outputs/apk/release/app-release.apk"
+          APK="$(find android/app/build/outputs/apk/release -type f -name '*.apk' | head -n 1)"
 
-          test -s "$APK"
+          if [ -z "$APK" ]; then
+            echo "ERROR: No Release APK was produced."
+            find android/app/build/outputs -type f 2>/dev/null || true
+            exit 1
+          fi
 
-          echo "APK successfully created:"
-          ls -lh "$APK"
+          cp "$APK" consistency-habit-tracker-v2.0.apk
+          echo "APK created:"
+          ls -lh consistency-habit-tracker-v2.0.apk
 
       - name: Verify APK signature
-        shell: bash
         run: |
-          APKSIGNER=$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)
+          APK="$PWD/consistency-habit-tracker-v2.0.apk"
 
-          test -n "$APKSIGNER"
+          "$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -n 1)/apksigner" verify --verbose "$APK"
 
-          "$APKSIGNER" verify --verbose \
-            android/app/build/outputs/apk/release/app-release.apk
+          echo "APK signature verification passed."
+
+      - name: Verify APK package
+        run: |
+          APK="$PWD/consistency-habit-tracker-v2.0.apk"
+
+          "$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -n 1)/apkanalyzer" manifest application-id "$APK"
 
       - name: Upload signed APK
         uses: actions/upload-artifact@v4
         with:
-          name: consistency-habit-tracker-v2-signed-release
-          path: android/app/build/outputs/apk/release/app-release.apk
+          name: Consistency-Habit-Tracker-v2.0-Signed
+          path: consistency-habit-tracker-v2.0.apk
           if-no-files-found: error
+          retention-days: 30
