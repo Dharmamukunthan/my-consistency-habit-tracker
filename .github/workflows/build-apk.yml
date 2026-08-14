@@ -24,7 +24,7 @@ jobs:
           cat > package.json <<'EOF'
           {
             "name": "consistency-habit-tracker",
-            "version": "1.0.0",
+            "version": "2.0.0",
             "private": true,
             "scripts": {
               "build": "echo Web app ready"
@@ -70,12 +70,28 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v4
 
-      - name: Build APK
-        working-directory: android
-        run: ./gradlew assembleDebug --no-daemon
+      - name: Restore release keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 --decode > "$GITHUB_WORKSPACE/release-key.jks"
 
-      - name: Upload APK
+      - name: Build signed release APK
+        working-directory: android
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon \
+            -Pandroid.injected.signing.store.file="$GITHUB_WORKSPACE/release-key.jks" \
+            -Pandroid.injected.signing.store.password="$KEYSTORE_PASSWORD" \
+            -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
+            -Pandroid.injected.signing.key.password="$KEY_PASSWORD"
+
+      - name: Upload signed APK
         uses: actions/upload-artifact@v4
         with:
-          name: consistency-habit-tracker-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: consistency-habit-tracker-v2.0-signed
+          path: android/app/build/outputs/apk/release/app-release.apk
