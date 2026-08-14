@@ -35,9 +35,6 @@ jobs:
             "name": "consistency-habit-tracker",
             "version": "2.0.0",
             "private": true,
-            "scripts": {
-              "cap": "cap"
-            },
             "dependencies": {
               "@capacitor/core": "8.4.2"
             },
@@ -58,13 +55,46 @@ jobs:
           {
             "appId": "com.consistency.habittracker",
             "appName": "Consistency Habit Tracker",
-            "webDir": "."
+            "webDir": "www"
           }
           EOF
 
+      - name: Prepare web assets
+        run: |
+          rm -rf www
+          mkdir -p www
+
+          cp index.html www/
+          cp manifest.json www/
+          cp sw.js www/
+          cp icon.svg www/
+
+          echo "Web assets:"
+          ls -la www
+
       - name: Validate Capacitor configuration
         run: |
-          node -e "const c=require('./capacitor.config.json'); if(c.appId!=='com.consistency.habittracker') process.exit(1); if(c.webDir!=='.') process.exit(1); console.log(c)"
+          node - <<'NODE'
+          const fs = require("fs");
+
+          const config = JSON.parse(
+            fs.readFileSync("capacitor.config.json", "utf8")
+          );
+
+          if (config.appId !== "com.consistency.habittracker") {
+            throw new Error("Invalid appId");
+          }
+
+          if (config.webDir !== "www") {
+            throw new Error("Invalid webDir");
+          }
+
+          if (!fs.existsSync("www/index.html")) {
+            throw new Error("www/index.html is missing");
+          }
+
+          console.log("Capacitor configuration is valid.");
+          NODE
 
       - name: Add Android platform
         run: npx cap add android
@@ -74,19 +104,25 @@ jobs:
 
       - name: Check Android project
         run: |
-          test -f android/settings.gradle || test -f android/settings.gradle.kts
           test -f android/app/build.gradle || test -f android/app/build.gradle.kts
-          test -f index.html
-          echo "Android project and web app are present."
+          test -f android/settings.gradle || test -f android/settings.gradle.kts
+          test -f android/app/src/main/assets/capacitor.config.json
+          test -f android/app/src/main/assets/capacitor.plugins.json
+
+          echo "Android project checks passed."
 
       - name: Restore signing keystore
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
         run: |
           test -n "$KEYSTORE_BASE64"
-          echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/release-keystore.jks"
+
+          echo "$KEYSTORE_BASE64" | base64 --decode \
+            > "$RUNNER_TEMP/release-keystore.jks"
+
           test -s "$RUNNER_TEMP/release-keystore.jks"
-          echo "Keystore restored."
+
+          echo "Signing keystore restored."
 
       - name: Verify signing secrets
         env:
@@ -97,6 +133,7 @@ jobs:
           test -n "$KEYSTORE_PASSWORD"
           test -n "$KEY_ALIAS"
           test -n "$KEY_PASSWORD"
+
           echo "Signing secrets are present."
 
       - name: Build signed Release APK
@@ -106,6 +143,7 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           cd android
+
           chmod +x gradlew
 
           ./gradlew clean assembleRelease \
@@ -117,31 +155,40 @@ jobs:
 
       - name: Find Release APK
         run: |
-          APK="$(find android/app/build/outputs/apk/release -type f -name '*.apk' | head -n 1)"
+          APK=$(find android/app/build/outputs/apk/release \
+            -type f \
+            -name "*.apk" \
+            | head -n 1)
 
           if [ -z "$APK" ]; then
-            echo "ERROR: No Release APK was produced."
+            echo "ERROR: Release APK was not created."
             find android/app/build/outputs -type f 2>/dev/null || true
             exit 1
           fi
 
           cp "$APK" consistency-habit-tracker-v2.0.apk
-          echo "APK created:"
+
+          echo "Release APK found:"
           ls -lh consistency-habit-tracker-v2.0.apk
 
       - name: Verify APK signature
         run: |
-          APK="$PWD/consistency-habit-tracker-v2.0.apk"
+          BUILD_TOOLS=$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -n 1)
 
-          "$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -n 1)/apksigner" verify --verbose "$APK"
+          "$ANDROID_HOME/build-tools/$BUILD_TOOLS/apksigner" \
+            verify \
+            --verbose \
+            consistency-habit-tracker-v2.0.apk
 
           echo "APK signature verification passed."
 
       - name: Verify APK package
         run: |
-          APK="$PWD/consistency-habit-tracker-v2.0.apk"
+          BUILD_TOOLS=$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -n 1)
 
-          "$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -n 1)/apkanalyzer" manifest application-id "$APK"
+          "$ANDROID_HOME/build-tools/$BUILD_TOOLS/apkanalyzer" \
+            manifest application-id \
+            consistency-habit-tracker-v2.0.apk
 
       - name: Upload signed APK
         uses: actions/upload-artifact@v4
